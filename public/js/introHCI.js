@@ -10,8 +10,8 @@ $(document).ready(function() {
  */
 function initializePage() {
 	$('.project a').click(addProjectDetails);
-
 	$('#colorBtn').click(randomizeColors);
+	$('#imgBtn').click(getImage);
 }
 
 /*
@@ -25,14 +25,52 @@ function addProjectDetails(e) {
 	var projectID = $(this).closest('.project').attr('id');
 	// get rid of 'project' from the front of the id 'project3'
 	var idNumber = projectID.substr('project'.length);
-
+	//Will get a result from the url and pass it to addProject function
+	$.get("/project/"+idNumber, addProject);
+	
 	console.log("User clicked on project " + idNumber);
 }
 
+function addProject(result) {
+	console.log(result);
+
+	var id = result['id'];
+	var projectHTML = '<img src="' + result['image'] + '" class="detailsImage">' + '<h5>' + result['date'] + '</h5>' + '<p>' + result['summary'] + '</p>';
+	$('#project'+id+' .details').html(projectHTML);
+}
+
+function getImage(e) {
+	e.preventDefault();
+
+	var query = 'http://www.panoramio.com/map/get_panoramas.php?' +
+			'set=public&from=0&to=10&minx=-30&miny=-30&maxx=30&maxy=30&size=medium&mapfilter=true';
+	$.get(query, showImage, 'jsonp');
+}
+
+function showImage(result) {
+	console.log(result);
+
+	var randomPhoto = Math.floor(result['photos'].length * Math.random());
+	var imgURL = result['photos'][randomPhoto]['photo_file_url'];
+	$('#randomImage').html('<img src="' + imgURL + '">');
+}
 /*
  * Make an AJAX call to retrieve a color palette for the site
  * and apply it
  */
 function randomizeColors(e) {
 	console.log("User clicked on color button");
+
+	$.get("/palette", changeColor);
+}
+
+function changeColor(result){
+	var colors = result['colors']['hex'];
+	console.log(colors);
+
+	$('body').css('background-color', colors[0]);
+	$('.thumbnail').css('background-color', colors[1]);
+	$('h1, h2, h3, h4, h5, h5').css('color', colors[2]);
+	$('p').css('color', colors[3]);
+	$('.project img').css('opacity', .75);
 }
